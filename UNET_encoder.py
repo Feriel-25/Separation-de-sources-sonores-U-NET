@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 
 class Encoder(nn.Module):
-    def __init__(self, kernel_size, stride):
+    def __init__(self, kernel_size=5, stride=2):
         super(Encoder, self).__init__()
         self.conv1 = nn.Conv2d(1, 16, kernel_size, stride)
         self.bn1 = nn.BatchNorm2d(16)
@@ -33,4 +33,4 @@ class Encoder(nn.Module):
         skip_connections .append(x)
         x = self.leaky_relu(self.bn6(self.conv6(x)))
         skip_connections .append(x)
-        return torch.stack(skip_connections ),x
+        return skip_connections ,x
