@@ -37,8 +37,8 @@ from torch.utils.data import Dataset
 
 class NaiveGeneratorDataset(Dataset):
     def __init__(self, track_duration=3.0):
-        #self.mus = musdb.DB(root="C://Users//linda//OneDrive//Documents//M2 SORBONNE//SON av//TP4//musdb18")
-        self.mus=musdb.DB(root="C://Users//ferie//MUSDB18//MUSDB18-7")
+        self.mus = musdb.DB(root="C://Users//linda//OneDrive//Documents//M2 SORBONNE//SON av//TP4//musdb18")
+        #self.mus=musdb.DB(root="C://Users//ferie//MUSDB18//MUSDB18-7")
         self.track_duration = track_duration
 
     def __len__(self):
@@ -70,7 +70,7 @@ def train (model,device,dataloader,epochs,print_every,learning_rate=0.001):
             X, Y = X.to(device), Y.to(device)
             breakpoint()
             optimizer.zero_grad()  # Zero the gradients
-            mask = unet(X.unsqueeze())  # Forward pass
+            mask = unet(X.unsqueeze(1))  # Forward pass
           
             predicted_spectrogram = mask * X  # Apply mask to input
             
