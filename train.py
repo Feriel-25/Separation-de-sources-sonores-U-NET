@@ -9,6 +9,7 @@ import torch
 from torch.utils.data import IterableDataset
 import musdb
 import random
+import librosa
 
 
 from torch.utils.data import Dataset
@@ -34,21 +35,28 @@ from torch.utils.data import Dataset
         return torch.stack(batch_x), torch.stack(batch_y)"""
 
 class NaiveGeneratorDataset(Dataset):
-    def __init__(self, total_samples, track_duration=5.0):
+    def __init__(self, total_samples, track_duration=3.0):
         self.mus = musdb.DB(root="C://Users//linda//OneDrive//Documents//M2 SORBONNE//SON av//TP4//musdb18")
-        self.total_samples = total_samples
         self.track_duration = track_duration
 
     def __len__(self):
-        return self.total_samples
+        return len(self.mus.tracks)
 
     def __getitem__(self, idx):
-        track = random.choice(self.mus.tracks)
+        track = self.mus.tracks[idx]
         track.chunk_duration = self.track_duration
         track.chunk_start = random.uniform(0, track.duration - track.chunk_duration)
-        x = torch.tensor(track.audio.T)  
-        y = torch.tensor(track.targets['vocals'].audio.T)
-        return torch.tensor(x), torch.tensor(y)
+        Dx = librosa.stft(track.audio.T, n_fft=512, hop_length=64,win_length=128)
+        Dy = librosa.stft(track.targets['vocals'].audio.T, n_fft=512, hop_length=64,win_length=128)
+        breakpoint()
+        Xmag, _ = librosa.magphase(Dx)
+        Ymag, _ = librosa.magphase(Dy)
+        breakpoint()
+        X = torch.tensor(Xmag.T)
+        Y = torch.tensor(Ymag.T)
+        breakpoint()
+        return X, Y
+
 
 
 
@@ -60,10 +68,10 @@ def train (model,device,dataloader,epochs,print_every,learning_rate=0.001):
         for batch in tqdm(dataloader, desc=f'Epoch {epoch + 1}/{epochs}'): 
             X, Y = batch
             X, Y = X.to(device), Y.to(device)
-            breakpoint()
+          
             optimizer.zero_grad()  # Zero the gradients
             mask = unet(X)  # Forward pass
-            breakpoint()
+          
             predicted_spectrogram = mask * X  # Apply mask to input
             
             loss = loss_function(predicted_spectrogram, Y)  # Calculate loss
