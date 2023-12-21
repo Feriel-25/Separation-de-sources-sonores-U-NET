@@ -21,7 +21,6 @@ class Encoder(nn.Module):
 
     def forward(self, x):
         skip_connections =[]
-        breakpoint()
         x = self.leaky_relu(self.bn1(self.conv1(x)))
         skip_connections.append(x)
         x = self.leaky_relu(self.bn2(self.conv2(x)))
@@ -34,4 +33,4 @@ class Encoder(nn.Module):
         skip_connections.append(x)
         x = self.leaky_relu(self.bn6(self.conv6(x)))
         skip_connections.append(x)
-        return skip_connections ,x
+        return torch.stack(skip_connections) ,torch.tensor(x)

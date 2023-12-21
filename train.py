@@ -68,7 +68,7 @@ def train (model,device,dataloader,epochs,print_every,learning_rate=0.001):
         for batch in tqdm(dataloader, desc=f'Epoch {epoch + 1}/{epochs}'): 
             X, Y = batch
             X, Y = X.to(device), Y.to(device)
-            breakpoint()
+        
             optimizer.zero_grad()  # Zero the gradients
             mask = unet(X.unsqueeze(1))  # Forward pass
           
@@ -94,14 +94,14 @@ epochs=1
 print_every=1
 learning_rate=0.001
 
-mus = musdb.DB(root="C://Users//linda//OneDrive//Documents//M2 SORBONNE//SON av//TP4//musdb18")
-mus_train = musdb.DB(subsets="train")
-mus_test = musdb.DB(subsets="test")
+#mus = musdb.DB(root="/content/musdb18")
+mus_train = musdb.DB(root="/content/musdb18",subsets="train")
+#mus_test = musdb.DB(subsets="test")
 print("Loading data...")
-generator_dataset = NaiveGeneratorDataset()  
+generator_dataset = NaiveGeneratorDataset(mus_train)  
 
-dataloader = DataLoader(mus_train, batch_size=64, shuffle=True)
-
+dataloader = DataLoader(generator_dataset, batch_size=64, shuffle=True)
 print("Data loaded.")
+
 print("Training...")
 train(unet,device, dataloader,epochs,print_every,learning_rate)
