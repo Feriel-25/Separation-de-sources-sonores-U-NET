@@ -36,8 +36,8 @@ from torch.utils.data import Dataset
         return torch.stack(batch_x), torch.stack(batch_y)"""
 
 class NaiveGeneratorDataset(Dataset):
-    def __init__(self, track_duration=3.0):
-        self.mus = musdb.DB(root="C://Users//linda//OneDrive//Documents//M2 SORBONNE//SON av//TP4//musdb18")
+    def __init__(self,mus, track_duration=3.0):
+        self.mus=mus
         #self.mus=musdb.DB(root="C://Users//ferie//MUSDB18//MUSDB18-7")
         self.track_duration = track_duration
 
@@ -94,10 +94,13 @@ epochs=1
 print_every=1
 learning_rate=0.001
 
+mus = musdb.DB(root="C://Users//linda//OneDrive//Documents//M2 SORBONNE//SON av//TP4//musdb18")
+mus_train = musdb.DB(subsets="train")
+mus_test = musdb.DB(subsets="test")
 print("Loading data...")
 generator_dataset = NaiveGeneratorDataset()  
 
-dataloader = DataLoader(generator_dataset, batch_size=64, shuffle=True)
+dataloader = DataLoader(mus_train, batch_size=64, shuffle=True)
 
 print("Data loaded.")
 print("Training...")
