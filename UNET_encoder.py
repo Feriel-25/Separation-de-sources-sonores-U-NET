@@ -21,16 +21,17 @@ class Encoder(nn.Module):
 
     def forward(self, x):
         skip_connections =[]
+        breakpoint()
         x = self.leaky_relu(self.bn1(self.conv1(x)))
-        skip_connections .append(x)
+        skip_connections.append(x)
         x = self.leaky_relu(self.bn2(self.conv2(x)))
-        skip_connections .append(x)
+        skip_connections.append(x)
         x = self.leaky_relu(self.bn3(self.conv3(x)))
-        skip_connections .append(x)
+        skip_connections.append(x)
         x = self.leaky_relu(self.bn4(self.conv4(x)))
-        skip_connections .append(x)
+        skip_connections.append(x)
         x = self.leaky_relu(self.bn5(self.conv5(x)))
-        skip_connections .append(x)
+        skip_connections.append(x)
         x = self.leaky_relu(self.bn6(self.conv6(x)))
-        skip_connections .append(x)
+        skip_connections.append(x)
         return skip_connections ,x

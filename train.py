@@ -10,6 +10,7 @@ from torch.utils.data import IterableDataset
 import musdb
 import random
 import librosa
+import numpy as np
 
 
 from torch.utils.data import Dataset
@@ -35,8 +36,9 @@ from torch.utils.data import Dataset
         return torch.stack(batch_x), torch.stack(batch_y)"""
 
 class NaiveGeneratorDataset(Dataset):
-    def __init__(self, total_samples, track_duration=3.0):
-        self.mus = musdb.DB(root="C://Users//linda//OneDrive//Documents//M2 SORBONNE//SON av//TP4//musdb18")
+    def __init__(self, track_duration=3.0):
+        #self.mus = musdb.DB(root="C://Users//linda//OneDrive//Documents//M2 SORBONNE//SON av//TP4//musdb18")
+        self.mus=musdb.DB(root="C://Users//ferie//MUSDB18//MUSDB18-7")
         self.track_duration = track_duration
 
     def __len__(self):
@@ -46,15 +48,13 @@ class NaiveGeneratorDataset(Dataset):
         track = self.mus.tracks[idx]
         track.chunk_duration = self.track_duration
         track.chunk_start = random.uniform(0, track.duration - track.chunk_duration)
-        Dx = librosa.stft(track.audio.T, n_fft=512, hop_length=64,win_length=128)
-        Dy = librosa.stft(track.targets['vocals'].audio.T, n_fft=512, hop_length=64,win_length=128)
-        breakpoint()
+        Dx = librosa.stft(np.mean(track.audio,axis=1), n_fft=512, hop_length=64,win_length=128)
+        Dy = librosa.stft(np.mean(track.targets['vocals'].audio,axis=1), n_fft=512, hop_length=64,win_length=128)     
         Xmag, _ = librosa.magphase(Dx)
-        Ymag, _ = librosa.magphase(Dy)
-        breakpoint()
+        Ymag, _ = librosa.magphase(Dy)     
         X = torch.tensor(Xmag.T)
         Y = torch.tensor(Ymag.T)
-        breakpoint()
+       
         return X, Y
 
 
@@ -68,9 +68,9 @@ def train (model,device,dataloader,epochs,print_every,learning_rate=0.001):
         for batch in tqdm(dataloader, desc=f'Epoch {epoch + 1}/{epochs}'): 
             X, Y = batch
             X, Y = X.to(device), Y.to(device)
-          
+            breakpoint()
             optimizer.zero_grad()  # Zero the gradients
-            mask = unet(X)  # Forward pass
+            mask = unet(X.unsqueeze())  # Forward pass
           
             predicted_spectrogram = mask * X  # Apply mask to input
             
@@ -95,7 +95,7 @@ print_every=1
 learning_rate=0.001
 
 print("Loading data...")
-generator_dataset = NaiveGeneratorDataset(total_samples=1000)  
+generator_dataset = NaiveGeneratorDataset()  
 
 dataloader = DataLoader(generator_dataset, batch_size=64, shuffle=True)
 
