@@ -18,16 +18,9 @@ from torch.utils.data import Dataset
 
 
 class NaiveGeneratorDataset(Dataset):
-<<<<<<< HEAD
     def _init_(self, mus):
         self.mus = mus
         self.track_duration = (128 - 1) * 768 / 8192
-=======
-    def __init__(self,mus, track_duration=3.0):
-        self.mus=mus
-        #self.mus=musdb.DB(root="C://Users//ferie//MUSDB18//MUSDB18-7")
-        self.track_duration = track_duration
->>>>>>> ecc63b75c03e7ad280954192d9367bd0e109438c
 
     def _len_(self):
         return len(self.mus.tracks)
@@ -76,12 +69,8 @@ def train (model,device,dataloader,epochs,print_every,learning_rate=0.001):
             X, Y = X.to(device), Y.to(device)
         
             optimizer.zero_grad()  # Zero the gradients
-<<<<<<< HEAD
             
             mask = model(X.unsqueeze(1)).float()  # Forward pass
-=======
-            mask = unet(X.unsqueeze(1))  # Forward pass
->>>>>>> ecc63b75c03e7ad280954192d9367bd0e109438c
           
             predicted_spectrogram = mask * X  # Apply mask to input
             
@@ -113,19 +102,12 @@ learning_rate=0.001
 
 #mus = musdb.DB(root="/content/musdb18")
 mus_train = musdb.DB(root="/content/musdb18",subsets="train")
-<<<<<<< HEAD
 #mus_train = musdb.DB(root="/content/drive/My Drive/musdb_dataset",subsets="train")
-=======
->>>>>>> ecc63b75c03e7ad280954192d9367bd0e109438c
 #mus_test = musdb.DB(subsets="test")
 print("Loading data...")
 generator_dataset = NaiveGeneratorDataset(mus_train)  
 
-<<<<<<< HEAD
 dataloader = DataLoader(generator_dataset, batch_size=32, shuffle=True)
-=======
-dataloader = DataLoader(generator_dataset, batch_size=64, shuffle=True)
->>>>>>> ecc63b75c03e7ad280954192d9367bd0e109438c
 print("Data loaded.")
 
 print("Training...")
