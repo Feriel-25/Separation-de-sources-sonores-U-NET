@@ -11,6 +11,6 @@ class UNET(nn.Module):
         self.device=device
         
     def forward(self,x):
-        enc_out,concat_out = self.encoder(x)
-        mask = self.decoder(enc_out,concat_out)
+        x1,x2,x3,x4,x5,x6 = self.encoder(x)
+        mask = self.decoder(x1,x2,x3,x4,x5,x6)
         return mask

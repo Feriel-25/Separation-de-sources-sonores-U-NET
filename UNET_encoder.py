@@ -4,8 +4,8 @@ import torch.nn as nn
 import torch.nn.functional as F 
 
 class Encoder(nn.Module):
-    def _init_(self, kernel_size=5, stride=2):
-        super(Encoder, self)._init_()
+    def __init__(self, kernel_size=5, stride=2):
+        super(Encoder, self).__init__()
         self.conv1 = nn.Conv2d(1, 16, kernel_size, stride,padding=2)
         self.bn1 = nn.BatchNorm2d(16)
         self.conv2 = nn.Conv2d(16, 32, kernel_size, stride,padding=2)

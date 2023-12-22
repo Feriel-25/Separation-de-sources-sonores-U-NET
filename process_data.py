@@ -11,7 +11,7 @@ for track in mus:
 def generator():
     while True:
         track = random.choice(mus.tracks)
-        track.chunk_duration = 5.0
+        track.chunk_duration = (128 - 1) * 768 / 8192
         track.chunk_start = random.uniform(0, track.duration - track.chunk_duration)
         x = track.audio.T
         y = track.targets['vocals'].audio.T
@@ -32,4 +32,5 @@ def tfst(batches,window=1024, hop=768):
         y = torch.stft(batch[1],window,hop)
         yield x,y
 
-        
+  
+    

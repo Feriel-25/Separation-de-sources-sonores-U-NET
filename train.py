@@ -18,14 +18,14 @@ from torch.utils.data import Dataset
 
 
 class NaiveGeneratorDataset(Dataset):
-    def _init_(self, mus):
+    def __init__(self, mus):
         self.mus = mus
         self.track_duration = (128 - 1) * 768 / 8192
 
-    def _len_(self):
+    def __len__(self):
         return len(self.mus.tracks)
 
-    def _getitem_(self, idx):
+    def __getitem__(self, idx):
         track = self.mus.tracks[idx]
         track.chunk_duration = self.track_duration
         track.chunk_start = random.uniform(0, track.duration -self.track_duration)

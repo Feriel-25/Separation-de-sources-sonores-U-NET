@@ -3,8 +3,8 @@ import torch
 import torch.nn as nn
 
 class Decoder(nn.Module):
-    def _init_(self, stride=2, kernel_size=5, padding=2):
-        super(Decoder, self)._init_()
+    def __init__(self, stride=2, kernel_size=5, padding=2):
+        super(Decoder, self).__init__()
         # Define the deconvolution and batch normalization layers
         self.deconv1 = nn.ConvTranspose2d(512, 256, kernel_size=kernel_size, stride=stride, padding=padding,output_padding=1)
         self.bn1 = nn.BatchNorm2d(256)
