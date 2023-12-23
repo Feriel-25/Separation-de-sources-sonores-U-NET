@@ -16,7 +16,7 @@ decoder = Encoder()
 model   = UNET(encoder,decoder,device).to(device)
 
 # On charge les paramètres des modèles : 
-model.load_state_dict(torch.load('saves/best_model.pth',map_location=torch.device(device))["model_state_dict"])
+model.load_state_dict(torch.load('../best_model.pth',map_location=torch.device(device))["model_state_dict"])
 
 # On passe en mode évaluation :
 model.eval()
