@@ -61,9 +61,7 @@ for start in range(0, track_length, segment_length):
 
     # Reconstruction de l'audio des voix séparées
     audio_voices = librosa.istft(D_voices, hop_length=hop_length)
-    audio_voices = audio_voices / np.max(np.abs(audio_voices))
-    audio_resampled = librosa.resample(audio_voices, orig_sr=8192, target_sr=44100)
-    reconstructed_audio.append(audio_resampled)
+    reconstructed_audio.append(audio_voices)
 
 # On concatène les segments pour obtenir l'audio séparé complet
 reconstructed_audio=np.concatenate(reconstructed_audio, axis=0)
