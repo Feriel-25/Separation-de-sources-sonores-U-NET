@@ -1,73 +1,73 @@
-import torch 
-from tqdm import tqdm
-import torch.nn as nn 
 from UNET import UNET
 from UNET_encoder import Encoder
 from UNET_decoder import Decoder
 import torch
 import musdb
-import random
 import librosa
 import numpy as np
+import soundfile as sf
 
 device=torch.device("cuda" if torch.cuda.is_available() else "cpu")
-encoder = Decoder()
-decoder = Encoder()
-model   = UNET(encoder,decoder,device).to(device)
+encoder = Encoder()
+decoder = Decoder()
 
-# On charge les paramètres des modèles : 
-model.load_state_dict(torch.load('../best_model.pth',map_location=torch.device(device))["model_state_dict"])
 
-# On passe en mode évaluation :
+model = UNET(encoder, decoder, device).to(device)
+model.load_state_dict(torch.load('/content/save/best_model.pth'))
 model.eval()
 
-# On recupere un exemple du test set :
-mus_test = musdb.DB(root="/content/musdb18",subsets="test")
-track = random.choice(mus_test.tracks)
 
-# Define parameters
-target_sr = 8192  # Target sampling rate
-hop_length = 768  # Hop length for STFT
-n_fft = 1024  # Number of FFT components
-segment_length_sec = 11  # Length of the audio patch in seconds
-segment_samples = target_sr * segment_length_sec  # Number of samples in the audio patch
+n_fft = 1024
+hop_length = 768
+track_duration = (128 - 1) * 768 / 8192
 
-# STFT to convert the time-domain audio signal to the time-frequency domain
-stft_patches = []
-for start_sample in range(0, len(track.audio.T), segment_samples):
-    end_sample = start_sample + segment_samples
-    if end_sample > len(track.audio.T):
-        # If the last segment is shorter than the desired length, it can be padded or ignored
-        # Here we choose to ignore it
+mus_test = musdb.DB(root="/content/musdb18", subsets="test")
+track = mus_test.tracks[4]
+
+track_length = len(track.audio) # Longueur du track en échantillons
+segment_length = int(track_duration * track.rate)  # Longueur de chaque segment en échantillons
+
+
+reconstructed_audio=[]
+for start in range(0, track_length, segment_length):
+    end_sample = start + segment_length
+    if end_sample > track_length:
         break
-
-    # Take the mean across the stereo channels (if applicable) and apply STFT
-    segment = np.mean(track.audio.T[start_sample:end_sample], axis=1)
-    stft_segment = librosa.stft(segment, n_fft=n_fft, hop_length=hop_length)
-
-    # Only keep 128 time frames (128 points)
-    stft_segment = stft_segment[:, :128]
     
-    # Discard the last frequency bin to make it 512 instead of 513 if necessary
-    stft_segment = stft_segment[:-1, :] if stft_segment.shape[0] == 513 else stft_segment
+    track.chunk_duration = track_duration
+    track.chunk_start = start / track.rate
 
-    stft_patches.append(stft_segment)
+    # Mixage des pistes
+    audio_mix = np.mean(track.audio.T, axis=0)
+    audio_mix_resampled = librosa.resample(audio_mix, orig_sr=44100, target_sr=8192)
 
-D = librosa.stft(track, n_fft=n_fft, hop_length=hop_length)
+    # STFT du mixage
+    stft_mix = librosa.stft(audio_mix_resampled, n_fft=n_fft, hop_length=hop_length)
 
-# Compute the magnitude and phase
-magnitude, phase = librosa.magphase(D)
-#stft inverve to convert the time-frequency domain back to the time-domain audio signal
-audio_patches = []
-for stft_segment in stft_patches:
-    # Invert the STFT
-    audio_segment = librosa.istft(stft_segment, hop_length=hop_length)
-    
-    # Append the audio segment to the list of audio patches
-    audio_patches.append(audio_segment)
+    # On récupère la magnitude et la phase du mixage
+    magnitude_mix, phase_mix = librosa.magphase(stft_mix)
+    magnitude_mix = magnitude_mix[:-1, :]
+    phase_mix = phase_mix[:-1, :]
 
-# Concatenate the audio patches into a single audio signal
-audio = np.concatenate(audio_patches)
-audio = audio * phase
-# Save the audio signal as a WAV file
-librosa.output.write_wav('audio.wav', audio, sr=target_sr)
+    # On normalise la magnitude pour le modèle
+    magnitude_mix_normalized = (magnitude_mix - np.min(magnitude_mix)) / (np.max(magnitude_mix) - np.min(magnitude_mix) + 1e-10)
+
+    # Prédiction de la magnitude des voix séparées
+    mask = model(torch.tensor(magnitude_mix_normalized, dtype=torch.float32).unsqueeze(0).unsqueeze(0).to(device))
+    mask= mask.squeeze(0).squeeze(0).detach().cpu().numpy()
+
+    # Reconstruction de la magnitude des voix séparées
+    D_voices = mask * np.exp(1j * phase_mix)
+
+    # Reconstruction de l'audio des voix séparées
+    audio_voices = librosa.istft(D_voices, hop_length=hop_length)
+    audio_voices = audio_voices / np.max(np.abs(audio_voices))
+    audio_resampled = librosa.resample(audio_voices, orig_sr=8192, target_sr=44100)
+    reconstructed_audio.append(audio_resampled)
+
+# On concatène les segments pour obtenir l'audio séparé complet
+reconstructed_audio=np.concatenate(reconstructed_audio, axis=0)
+
+# On écrit l'audio séparé dans un fichier
+sf.write('voices_separated.wav', reconstructed_audio, 44100)
+
